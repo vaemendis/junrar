@@ -107,8 +107,8 @@ public class Archive implements Closeable, Iterable<FileHeader> {
 	 *            the the {@link VolumeManager} that will provide volume stream
 	 *            data
 	 * @param unrarCallback
-	 * 			gets feedback on the extraction progress            
-	 *            
+	 * 			gets feedback on the extraction progress
+	 *
 	 * @throws RarException .
 	 * @throws IOException .
 	 */
@@ -417,6 +417,9 @@ public class Archive implements Closeable, Iterable<FileHeader> {
 						macHeader.print();
 						this.headers.add(macHeader);
 
+						newpos = blockHead.getPositionInFile() + blockHead.getDataSize() + blockHead.getHeaderSize();
+						rof.setPosition(newpos);
+
 						break;
 					}
 					// TODO implement other subheaders
@@ -501,13 +504,13 @@ public class Archive implements Closeable, Iterable<FileHeader> {
 
 	/**
 	 * Returns an {@link InputStream} that will allow to read the file and
-	 * stream it. 
+	 * stream it.
 	 *
 	 * @param hd
 	 *            the header to be extracted
 	 * @throws RarException .
 	 *             if any IO error occur
-	 *             
+	 *
 	 * @return inputstream
 	 */
 	public InputStream getInputStream(final FileHeader hd) throws RarException {

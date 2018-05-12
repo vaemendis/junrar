@@ -5,20 +5,17 @@
  *
  * Source: $HeadURL$
  * Last changed: $LastChangedDate$
- * 
- * the unrar licence applies to all junrar source and binary distributions 
+ *
+ * the unrar licence applies to all junrar source and binary distributions
  * you are not allowed to use this source to re-create the RAR compression algorithm
- * 
+ *
  * Here some html entities which can be used for escaping javadoc tags:
  * "&":  "&#038;" or "&amp;"
  * "<":  "&#060;" or "&lt;"
  * ">":  "&#062;" or "&gt;"
- * "@":  "&#064;" 
+ * "@":  "&#064;"
  */
 package com.github.junrar.unpack;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 import com.github.junrar.exception.RarException;
 import com.github.junrar.unpack.decode.AudioVariables;
@@ -31,11 +28,14 @@ import com.github.junrar.unpack.decode.LowDistDecode;
 import com.github.junrar.unpack.decode.MultDecode;
 import com.github.junrar.unpack.decode.RepDecode;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 
 
 /**
  * DOCUMENT ME
- * 
+ *
  * @author $LastChangedBy$
  * @version $LastChangedRevision$
  */
@@ -114,7 +114,11 @@ public abstract class Unpack20 extends Unpack15
 					return;
 			}
 			if (UnpAudioBlock != 0) {
-				int AudioNumber = decodeNumber(MD[UnpCurChannel]);
+				MultDecode md = MD[UnpCurChannel];
+				if (md == null) {
+					continue;
+				}
+				int AudioNumber = decodeNumber(md);
 
 				if (AudioNumber == 256) {
 					if (!ReadTables20())
@@ -208,7 +212,8 @@ public abstract class Unpack20 extends Unpack15
 
 		int DestPtr = unpPtr - Distance;
 		if (DestPtr < Compress.MAXWINSIZE - 300
-				&& unpPtr < Compress.MAXWINSIZE - 300) {
+				&& unpPtr < Compress.MAXWINSIZE - 300
+				&& DestPtr >= 0) {
 			window[unpPtr++] = window[DestPtr++];
 			window[unpPtr++] = window[DestPtr++];
 			while (Length > 2) {
@@ -224,7 +229,7 @@ public abstract class Unpack20 extends Unpack15
 	}
 
 	protected void makeDecodeTables(byte[] lenTab, int offset, Decode dec,
-			int size)
+									int size)
 	{
 		int[] lenCount = new int[16];
 		int[] tmpPos = new int[16];
@@ -321,8 +326,8 @@ public abstract class Unpack20 extends Unpack15
 //			N = 0;
 //		}
 //		return (dec.getDecodeNum()[N]);
-        int[] decodeLen = dec.getDecodeLen();
-        if (bitField < decodeLen[8]) {
+		int[] decodeLen = dec.getDecodeLen();
+		if (bitField < decodeLen[8]) {
 			if (bitField < decodeLen[4]) {
 				if (bitField < decodeLen[2]) {
 					if (bitField < decodeLen[1]) {
@@ -451,8 +456,12 @@ public abstract class Unpack20 extends Unpack15
 			return (true);
 		}
 		if (UnpAudioBlock != 0)
-			for (I = 0; I < UnpChannels; I++)
-				makeDecodeTables(Table, I * Compress.MC20, MD[I], Compress.MC20);
+			for (I = 0; I < UnpChannels; I++) {
+				MultDecode md = MD[I];
+				if (md != null) {
+					makeDecodeTables(Table, I * Compress.MC20, md, Compress.MC20);
+				}
+			}
 		else {
 			makeDecodeTables(Table, 0, LD, Compress.NC20);
 			makeDecodeTables(Table, Compress.NC20, DD, Compress.DC20);
@@ -539,56 +548,56 @@ public abstract class Unpack20 extends Unpack15
 				v.getDif()[I] = 0;
 			}
 			switch (NumMinDif) {
-			case 1:
-				if (v.getK1() >= -16) {
-					v.setK1(v.getK1() - 1);// V->K1--;
-				}
-				break;
-			case 2:
-				if (v.getK1() < 16) {
-					v.setK1(v.getK1() + 1);// V->K1++;
-				}
-				break;
-			case 3:
-				if (v.getK2() >= -16) {
-					v.setK2(v.getK2() - 1);// V->K2--;
-				}
-				break;
-			case 4:
-				if (v.getK2() < 16) {
-					v.setK2(v.getK2() + 1);// V->K2++;
-				}
-				break;
-			case 5:
-				if (v.getK3() >= -16) {
-					v.setK3(v.getK3() - 1);
-				}
-				break;
-			case 6:
-				if (v.getK3() < 16) {
-					v.setK3(v.getK3() + 1);
-				}
-				break;
-			case 7:
-				if (v.getK4() >= -16) {
-					v.setK4(v.getK4() - 1);
-				}
-				break;
-			case 8:
-				if (v.getK4() < 16) {
-					v.setK4(v.getK4() + 1);
-				}
-				break;
-			case 9:
-				if (v.getK5() >= -16) {
-					v.setK5(v.getK5() - 1);
-				}
-				break;
-			case 10:
-				if (v.getK5() < 16) {
-					v.setK5(v.getK5() + 1);
-				}
-				break;
+				case 1:
+					if (v.getK1() >= -16) {
+						v.setK1(v.getK1() - 1);// V->K1--;
+					}
+					break;
+				case 2:
+					if (v.getK1() < 16) {
+						v.setK1(v.getK1() + 1);// V->K1++;
+					}
+					break;
+				case 3:
+					if (v.getK2() >= -16) {
+						v.setK2(v.getK2() - 1);// V->K2--;
+					}
+					break;
+				case 4:
+					if (v.getK2() < 16) {
+						v.setK2(v.getK2() + 1);// V->K2++;
+					}
+					break;
+				case 5:
+					if (v.getK3() >= -16) {
+						v.setK3(v.getK3() - 1);
+					}
+					break;
+				case 6:
+					if (v.getK3() < 16) {
+						v.setK3(v.getK3() + 1);
+					}
+					break;
+				case 7:
+					if (v.getK4() >= -16) {
+						v.setK4(v.getK4() - 1);
+					}
+					break;
+				case 8:
+					if (v.getK4() < 16) {
+						v.setK4(v.getK4() + 1);
+					}
+					break;
+				case 9:
+					if (v.getK5() >= -16) {
+						v.setK5(v.getK5() - 1);
+					}
+					break;
+				case 10:
+					if (v.getK5() < 16) {
+						v.setK5(v.getK5() + 1);
+					}
+					break;
 			}
 		}
 		return ((byte) Ch);
